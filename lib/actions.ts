@@ -1,6 +1,5 @@
 "use server"
 import FailedHost from '../models/FailedHost';
-import fetch from "node-fetch"; // Asegúrate de tener un polyfill o usar fetch nativo si está disponible
 
 
 export async function addHosts(hostnames: string[], filial: number) {
@@ -78,30 +77,39 @@ const BASE_URL = "https://sawx0001lx.bancocredicoop.coop/api/v2/inventories/22/h
 
 async function fetchIPForHost(hostname: string): Promise<string> {
   try {
-    // Concatena el hostname completo para la consulta
-    const response = await fetch(`${BASE_URL}${hostname}`);
+    // Recupera las credenciales de AWX desde las variables de entorno
+    const awxUser = process.env.AWX_USER || 'awx_inventory';
+    const awxPassword = process.env.AWX_PASSWORD || 'fd7a0fdd3f16cd2994d94fd6adfebaf0';
+    // Crea el token de autenticación en base64
+    const auth = Buffer.from(`${awxUser}:${awxPassword}`).toString('base64');
+
+    // Realiza la consulta incluyendo el header de autenticación
+    const response = await fetch(`${BASE_URL}${hostname}`, {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+      },
+    });
+
     const data = await response.json();
 
-    // Asegúrate de que data tenga resultados, por ejemplo, asumiendo que está en data.results
+    // Verifica que la consulta haya devuelto resultados
     if (data && Array.isArray(data.results) && data.results.length > 0) {
       const hostData = data.results[0];
 
-      // El campo "variables" es un string en formato JSON
       if (hostData.variables) {
-        let variablesObj;
         try {
-          variablesObj = JSON.parse(hostData.variables);
+          // Parsear el campo variables (cadena JSON)
+          const variablesObj = JSON.parse(hostData.variables);
+          return variablesObj.ansible_host || "";
         } catch (parseError) {
           console.error("Error al parsear el campo variables para el host:", hostname, parseError);
           return "";
         }
-        // Retorna el valor de 'ansible_host' que contiene la IP
-        return variablesObj.ansible_host || "";
       }
     }
   } catch (error) {
     console.error(`Error al obtener la IP para ${hostname}:`, error);
   }
-  // Si falla la consulta o no se encuentra la IP, se puede retornar cadena vacía o un valor por defecto
+  // Retorna cadena vacía en caso de error o si no se encontró la IP
   return "";
 }
