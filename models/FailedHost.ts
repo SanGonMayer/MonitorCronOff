@@ -1,6 +1,7 @@
 // models/FailedHost.ts
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../lib/db';
+import { db } from '../lib/db';
+
 
 class FailedHost extends Model {}
 
@@ -38,7 +39,7 @@ FailedHost.init(
     },
   },
   {
-    sequelize,
+    sequelize: db,
     modelName: 'failed_host', // nombre interno del modelo
     tableName: 'hosts_fallidos', // nombre real de la tabla en Postgres
     timestamps: false,
