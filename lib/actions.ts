@@ -1,42 +1,42 @@
 "use server"
+import FailedHost from '../models/FailedHost';
+import fetch from "node-fetch"; // Asegúrate de tener un polyfill o usar fetch nativo si está disponible
 
-import { db } from "@/lib/db"
 
-export async function addHosts(hostnames: string[], branch: string) {
+export async function addHosts(hostnames: string[], filial: number) {
   try {
     for (const hostname of hostnames) {
-      // Generate a fake IP for demonstration - in real app, you'd look this up
-      const ipParts = hostname.match(/\d+/g)
-      const ipSuffix = ipParts ? ipParts.join(".") : Math.floor(Math.random() * 255)
-      const ipAddress = `192.168.1.${ipSuffix}`
-
-      // Check if host exists
-      const existingHost = await db.query(`SELECT id FROM failed_hosts WHERE hostname = $1`, [hostname])
+      // Consulta el endpoint de AWX para obtener la IP real del host
+      const ipAddress = await fetchIPForHost(hostname) || `192.168.1.${Math.floor(Math.random() * 255)}`;
+      
+      // Verificamos si ya existe el host (usando el modelo o la consulta tradicional)
+      const existingHost = await db.query(`SELECT id FROM failed_hosts WHERE hostname = $1`, [hostname]);
 
       if (existingHost.rows.length > 0) {
-        // Update existing host
+        // Actualización: incrementa el contador y actualiza la IP
         await db.query(
           `UPDATE failed_hosts 
-           SET failure_count = failure_count + 1, 
+           SET failure_count = failure_count + 1,
+               ip_address = $2,
                last_failure = NOW() 
            WHERE hostname = $1`,
-          [hostname],
-        )
+          [hostname, ipAddress],
+        );
       } else {
-        // Insert new host
+        // Inserción: crea el nuevo registro
         await db.query(
           `INSERT INTO failed_hosts 
            (hostname, ip_address, branch, failure_count, last_failure) 
            VALUES ($1, $2, $3, 1, NOW())`,
-          [hostname, ipAddress, branch],
-        )
+          [hostname, ipAddress, filial],
+        );
       }
     }
 
-    return { success: true }
+    return { success: true };
   } catch (error) {
-    console.error("Error adding hosts:", error)
-    throw new Error("Failed to add hosts")
+    console.error("Error adding hosts:", error);
+    throw new Error("Failed to add hosts");
   }
 }
 
@@ -72,4 +72,36 @@ export async function connectToHost(ip: string) {
       message: `Failed to connect to ${ip}. Host may be offline.`,
     }
   }
+}
+
+const BASE_URL = "https://sawx0001lx.bancocredicoop.coop/api/v2/inventories/22/hosts/?name__startswith=";
+
+async function fetchIPForHost(hostname: string): Promise<string> {
+  try {
+    // Concatena el hostname completo para la consulta
+    const response = await fetch(`${BASE_URL}${hostname}`);
+    const data = await response.json();
+
+    // Asegúrate de que data tenga resultados, por ejemplo, asumiendo que está en data.results
+    if (data && Array.isArray(data.results) && data.results.length > 0) {
+      const hostData = data.results[0];
+
+      // El campo "variables" es un string en formato JSON
+      if (hostData.variables) {
+        let variablesObj;
+        try {
+          variablesObj = JSON.parse(hostData.variables);
+        } catch (parseError) {
+          console.error("Error al parsear el campo variables para el host:", hostname, parseError);
+          return "";
+        }
+        // Retorna el valor de 'ansible_host' que contiene la IP
+        return variablesObj.ansible_host || "";
+      }
+    }
+  } catch (error) {
+    console.error(`Error al obtener la IP para ${hostname}:`, error);
+  }
+  // Si falla la consulta o no se encuentra la IP, se puede retornar cadena vacía o un valor por defecto
+  return "";
 }
