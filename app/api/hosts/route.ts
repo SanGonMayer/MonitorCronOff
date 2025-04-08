@@ -1,6 +1,6 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import FailedHost from "@/models/FailedHost";
-export const dynamic = "force-dynamic";
 
 
 export async function GET() {
