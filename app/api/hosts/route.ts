@@ -1,15 +1,14 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import { NextResponse } from "next/server";
-import FailedHost from "@/models/FailedHost";
-
 
 export async function GET() {
   try {
+    // Importa el modelo de forma dinámica en tiempo de petición
+    const { default: FailedHost } = await import("@/models/FailedHost");
     const hosts = await FailedHost.findAll({
       order: [['last_failure', 'DESC']]
     });
-
     return NextResponse.json(hosts);
   } catch (error) {
     console.error("Error fetching hosts:", error);

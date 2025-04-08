@@ -1,11 +1,12 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-import { NextResponse } from "next/server"
-import { db } from "@/lib/db"
-
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    // Importa dinámicamente el objeto db
+    const { db } = await import("@/lib/db");
+
     const result = await db.query(`
       SELECT 
         branch,
@@ -16,11 +17,11 @@ export async function GET() {
         branch
       ORDER BY 
         count DESC
-    `)
+    `);
 
-    return NextResponse.json(result.rows)
+    return NextResponse.json(result.rows);
   } catch (error) {
-    console.error("Error fetching branch stats:", error)
-    return NextResponse.json({ error: "Failed to fetch branch statistics" }, { status: 500 })
+    console.error("Error fetching branch stats:", error);
+    return NextResponse.json({ error: "Failed to fetch branch statistics" }, { status: 500 });
   }
 }
