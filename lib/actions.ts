@@ -1,5 +1,6 @@
 "use server"
 import FailedHost from '../models/FailedHost';
+import HttpsProxyAgent from 'https-proxy-agent';
 
 
 export async function addHosts(hostnames: string[], filial: number) {
@@ -78,27 +79,29 @@ const BASE_URL = "https://sawx0001lx.bancocredicoop.coop/api/v2/inventories/22/h
 async function fetchIPForHost(hostname: string): Promise<string> {
   try {
     // Recupera las credenciales de AWX desde las variables de entorno
-    const awxUser = process.env.AWX_USER || 'awx_inventory';
-    const awxPassword = process.env.AWX_PASSWORD || 'fd7a0fdd3f16cd2994d94fd6adfebaf0';
-    // Crea el token de autenticación en base64
+    const awxUser = process.env.AWX_USER;
+    const awxPassword = process.env.AWX_PASSWORD;
     const auth = Buffer.from(`${awxUser}:${awxPassword}`).toString('base64');
-
-    // Realiza la consulta incluyendo el header de autenticación
+    
+    // Configura el agente de proxy para HTTPS usando la variable de entorno
+    const proxyUrl = process.env.HTTPS_PROXY; // asegúrate de que esté definido
+    const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+    
+    // Realiza la consulta incluyendo el header de autenticación y el agente de proxy (si existe)
     const response = await fetch(`${BASE_URL}${hostname}`, {
       headers: {
         'Authorization': `Basic ${auth}`,
       },
+      // Si proxyAgent es undefined, no se añade la propiedad
+      ...(proxyAgent && { agent: proxyAgent }),
     });
 
     const data = await response.json();
 
-    // Verifica que la consulta haya devuelto resultados
     if (data && Array.isArray(data.results) && data.results.length > 0) {
       const hostData = data.results[0];
-
       if (hostData.variables) {
         try {
-          // Parsear el campo variables (cadena JSON)
           const variablesObj = JSON.parse(hostData.variables);
           return variablesObj.ansible_host || "";
         } catch (parseError) {
@@ -110,6 +113,5 @@ async function fetchIPForHost(hostname: string): Promise<string> {
   } catch (error) {
     console.error(`Error al obtener la IP para ${hostname}:`, error);
   }
-  // Retorna cadena vacía en caso de error o si no se encontró la IP
   return "";
 }
