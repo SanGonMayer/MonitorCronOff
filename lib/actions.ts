@@ -99,18 +99,18 @@ export async function connectToHost(ip: string) {
     if (isReachable) {
       return {
         success: true,
-        message: Successfully connected to ${ip},
+        message: `Successfully connected to ${ip}`,
       }
     } else {
       return {
         success: false,
-        message: Host ${ip} is not responding,
+        message: `Host ${ip} is not responding`,
       }
     }
   } catch (error) {
     return {
       success: false,
-      message: Failed to connect to ${ip}. Host may be offline.,
+      message: `Failed to connect to ${ip}. Host may be offline.`,
     }
   }
 }
