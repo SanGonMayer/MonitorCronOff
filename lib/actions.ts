@@ -3,33 +3,26 @@
 import { db } from "@/lib/db"
 import { parse } from "yaml"
 
-const AWX_API_BASE = "http://sawx0001lx.bancocredicoop.coop/api/v2/inventories/22/hosts/?name="
-const AWX_USERNAME = process.env.AWX_USERNAME || ""
-const AWX_PASSWORD = process.env.AWX_PASSWORD || ""
+const AWX_API_URL = "http://sawx0001lx.bancocredicoop.coop/api/v2"
+
+const awxClient = axios.create({
+  baseURL: AWX_API_URL,
+  auth: {
+    username: process.env.AWX_USER_API || "",
+    password: process.env.AWX_PASS_API || "",
+  },
+  headers: {
+    Accept: "application/json",
+  },
+})
 
 async function getIpFromAWX(hostname: string): Promise<string | null> {
-  const url = `${AWX_API_BASE}${hostname}`
-  const authHeader = `Basic ${Buffer.from(`${AWX_USERNAME}:${AWX_PASSWORD}`).toString("base64")}`
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-    })
+    const response = await awxClient.get(`/inventories/22/hosts/?name=${hostname}`)
 
-    if (!response.ok) {
-      console.error(`AWX API error for ${hostname}: ${response.statusText}`)
-      return null
-    }
-
-    const data = await response.json()
-    const results = data.results
-
+    const results = response.data.results
     if (!results || results.length === 0) {
-      console.warn(`Host ${hostname} not found in AWX`)
+      console.warn(`Host ${hostname} no encontrado en AWX.`)
       return null
     }
 
@@ -37,11 +30,12 @@ async function getIpFromAWX(hostname: string): Promise<string | null> {
     const parsed = parse(variables)
 
     return parsed.ansible_host || null
-  } catch (err) {
-    console.error(`Error contacting AWX for ${hostname}:`, err)
+  } catch (error: any) {
+    console.error(`Error al consultar AWX para ${hostname}:`, error.response?.data || error.message)
     return null
   }
 }
+
 
 export async function addHosts(hostnames: string[], branch: string) {
   try {
