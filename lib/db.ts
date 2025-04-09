@@ -2,6 +2,8 @@
 import pkg from "pg";
 const { Pool } = pkg;
 
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+
 // Configura el pool usando la cadena de conexión de tu variable de entorno
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
