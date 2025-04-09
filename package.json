@@ -58,7 +58,13 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
-    "swr": "latest"
+    "pg-native": "latest",
+    "swr": "latest",
+    "express": "latest",
+    "cors": "latest",
+    "morgan": "latest",
+    "path": "latest",
+    "pg": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
