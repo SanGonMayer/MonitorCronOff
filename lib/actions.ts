@@ -93,16 +93,24 @@ export async function connectToHost(ip: string) {
       message: `La IP ${ip} responde a SSH como ${user}.`,
     }
   } catch (error: any) {
-    if (error.code === 255 || error.killed) {
+    const stderr = error.stderr?.toString() || ""
+    const stdout = error.stdout?.toString() || ""
+
+    // Si el host respondió pero falló la autenticación
+    if (
+      stderr.includes("Permission denied") ||
+      stderr.includes("Authentication failed") ||
+      stdout.includes("Solo las personas autorizadas") // texto de bienvenida en tu red
+    ) {
       return {
-        success: false,
-        message: `No se pudo conectar con ${ip} vía SSH (usuario ${user}). El host no responde o está caído.`,
+        success: true,
+        message: `La IP ${ip} responde a SSH como ${user}, pero falló la autenticación (lo cual está bien).`,
       }
     }
 
     return {
       success: false,
-      message: `Error al intentar conectar con ${ip} como ${user}: ${error.message}`,
+      message: `No se pudo conectar con ${ip} vía SSH (usuario ${user}). El host no responde o está caído.`,
     }
   }
 }
