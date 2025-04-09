@@ -1,18 +1,17 @@
-// db.ts
+// lib/db.ts
 import { Pool } from "pg";
 
-// Configura el pool usando la variable de entorno DATABASE_URL
+// Configura el pool usando la cadena de conexión de tu variable de entorno
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Función para realizar queries
+// Función auxiliar que ejecuta una query
 export const query = (text: string, params?: any[]) => pool.query(text, params);
 
-// Inicialización de la base de datos
+// Función para inicializar la base de datos (crear la tabla, etc.)
 export async function initDatabase() {
   try {
-    // Si bien la tabla ya existe, podemos usar CREATE TABLE IF NOT EXISTS
     await query(`
       CREATE TABLE IF NOT EXISTS failed_hosts (
         id SERIAL PRIMARY KEY,
@@ -25,10 +24,11 @@ export async function initDatabase() {
       )
     `);
 
-    // (Opcional) Agregar datos de ejemplo solo si la tabla está vacía
+    // (Opcional) Puedes agregar datos de ejemplo solo si es necesario
     const result = await query(`SELECT COUNT(*) FROM failed_hosts`);
     const count = parseInt(result.rows[0].count, 10);
     if (count === 0) {
+      // Ejemplo de inserciones para datos iniciales
       const sampleHosts = [
         { hostname: "HOST001", filial: "1" },
         { hostname: "HOST002", filial: "1" },
@@ -43,11 +43,10 @@ export async function initDatabase() {
       ];
 
       for (const host of sampleHosts) {
-        // Generamos una IP de ejemplo a partir del nombre del host
         const ipParts = host.hostname.match(/\d+/g);
         const ipSuffix = ipParts ? ipParts.join(".") : Math.floor(Math.random() * 255);
         const ipAddress = `192.168.1.${ipSuffix}`;
-
+  
         await query(
           `INSERT INTO failed_hosts (hostname, ip_address, filial, times_submitted, last_failure) 
            VALUES ($1, $2, $3, 1, NOW())`,
@@ -61,3 +60,6 @@ export async function initDatabase() {
     console.error("Error initializing database:", error);
   }
 }
+
+// Exportamos un objeto 'db' para que el resto del código que usa db.query siga funcionando
+export const db = { query };
