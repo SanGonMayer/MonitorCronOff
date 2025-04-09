@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-// Cargar explícitamente el archivo .env.local
-dotenv.config({ path: '.env' });
+dotenv.config();
 
 import { initDatabase } from "./lib/db.js";
 
