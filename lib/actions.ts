@@ -81,28 +81,27 @@ export async function addHosts(hostnames: string[], branch: string) {
 const execAsync = promisify(exec)
 
 export async function connectToHost(ip: string) {
-  const user = "segmayer"
-  const timeout = 5 // segundos
+  const timeout = 5 
 
-  const sshCommand = `ssh -o BatchMode=yes -o ConnectTimeout=${timeout} ${user}@${ip} exit`
+  const sshCommand = `ssh -o ConnectTimeout=${timeout} -o StrictHostKeyChecking=no -o BatchMode=yes ${ip} exit`
 
   try {
     await execAsync(sshCommand)
     return {
       success: true,
-      message: `Conexión SSH exitosa a ${ip}`,
+      message: `La IP ${ip} responde a SSH.`,
     }
   } catch (error: any) {
-    if (error.killed || error.code === 255) {
+    if (error.code === 255 || error.killed) {
       return {
         success: false,
-        message: `No se pudo conectar con ${ip} vía SSH. El host podría estar apagado o sin red.`,
+        message: `No se pudo establecer conexión SSH con ${ip}. El host no responde.`,
       }
     }
 
     return {
       success: false,
-      message: `Error inesperado al conectar con ${ip}: ${error.message}`,
+      message: `Error al intentar conectar con ${ip}: ${error.message}`,
     }
   }
 }
