@@ -185,8 +185,8 @@ export default function BranchView() {
                       <TableRow key={host.id}>
                         <TableCell className="font-medium">{host.hostname}</TableCell>
                         <TableCell>{host.ip_address}</TableCell>
-                        <TableCell>Filial {host.filial}</TableCell>
-                        <TableCell>{host.times_submitted}</TableCell>
+                        <TableCell>Filial {host.branch}</TableCell>
+                        <TableCell>{host.failure_count}</TableCell>
                         <TableCell>
                           <Button
                             variant="outline"

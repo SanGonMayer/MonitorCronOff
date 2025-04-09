@@ -6,11 +6,11 @@ export async function GET() {
     const result = await db.query(`
       SELECT 
         hostname,
-        times_submitted as count
+        failure_count as count
       FROM 
         failed_hosts
       ORDER BY 
-        times_submitted DESC
+        failure_count DESC
       LIMIT 10
     `)
 
