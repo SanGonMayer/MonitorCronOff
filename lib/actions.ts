@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 
-export async function addHosts(hostnames: string[], branch: string) {
+export async function addHosts(hostnames: string[], filial: string) {
   try {
     for (const hostname of hostnames) {
       // Generate a fake IP for demonstration - in real app, you'd look this up
@@ -26,9 +26,9 @@ export async function addHosts(hostnames: string[], branch: string) {
         // Insert new host
         await db.query(
           `INSERT INTO failed_hosts 
-           (hostname, ip_address, branch, failure_count, last_failure) 
+           (hostname, ip_address, filial, failure_count, last_failure) 
            VALUES ($1, $2, $3, 1, NOW())`,
-          [hostname, ipAddress, branch],
+          [hostname, ipAddress, filial],
         )
       }
     }
