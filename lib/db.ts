@@ -1,18 +1,16 @@
 // lib/db.ts
+import 'dotenv/config';
 import pkg from "pg";
 const { Pool } = pkg;
 
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
+console.log("DATABASE_URL in db.ts:", process.env.DATABASE_URL);
 
-// Configura el pool usando la cadena de conexión de tu variable de entorno
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Función auxiliar que ejecuta una query
 export const query = (text: string, params?: any[]) => pool.query(text, params);
 
-// Función para inicializar la base de datos (crear la tabla, etc.)
 export async function initDatabase() {
   try {
     await query(`
@@ -27,7 +25,6 @@ export async function initDatabase() {
       )
     `);
 
-    // (Opcional) Agregar datos de ejemplo solo si es necesario
     const result = await query(`SELECT COUNT(*) FROM failed_hosts`);
     const count = parseInt(result.rows[0].count, 10);
     if (count === 0) {
@@ -63,5 +60,5 @@ export async function initDatabase() {
   }
 }
 
-// Exportamos un objeto 'db' para que el resto del código que usa db.query siga funcionando
+// Exportamos un objeto 'db' para que otros módulos puedan usarlo
 export const db = { query };
