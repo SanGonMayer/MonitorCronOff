@@ -3,6 +3,8 @@
 import { db } from "@/lib/db"
 import { parse } from "yaml"
 import axios from "axios"
+import { exec } from "child_process"
+import { promisify } from "util"
 
 const AWX_API_URL = "http://sawx0001lx.bancocredicoop.coop/api/v2"
 
@@ -76,36 +78,31 @@ export async function addHosts(hostnames: string[], branch: string) {
   }
 }
 
+const execAsync = promisify(exec)
+
 export async function connectToHost(ip: string) {
+  const user = "segmayer"
+  const timeout = 5 // segundos
+
+  const sshCommand = `ssh -o BatchMode=yes -o ConnectTimeout=${timeout} ${user}@${ip} exit`
+
   try {
-    // Instead of using child_process, we'll use fetch to simulate a connection check
-    // In a real application, you would implement a proper server endpoint that uses SSH or other protocols
-
-    // Simulate a network request with a timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
-
-    // We'll use a random success/failure for demonstration
-    // In a real app, you'd have a proper API endpoint that checks connectivity
-    const isReachable = Math.random() > 0.3 // 70% chance of success for demo purposes
-
-    clearTimeout(timeoutId)
-
-    if (isReachable) {
-      return {
-        success: true,
-        message: `Successfully connected to ${ip}`,
-      }
-    } else {
+    await execAsync(sshCommand)
+    return {
+      success: true,
+      message: `Conexión SSH exitosa a ${ip}`,
+    }
+  } catch (error: any) {
+    if (error.killed || error.code === 255) {
       return {
         success: false,
-        message: `Host ${ip} is not responding`,
+        message: `No se pudo conectar con ${ip} vía SSH. El host podría estar apagado o sin red.`,
       }
     }
-  } catch (error) {
+
     return {
       success: false,
-      message: `Failed to connect to ${ip}. Host may be offline.`,
+      message: `Error inesperado al conectar con ${ip}: ${error.message}`,
     }
   }
 }
