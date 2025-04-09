@@ -6,7 +6,7 @@ export async function GET() {
     const result = await db.query(`
       SELECT 
         filial,
-        SUM(failure_count) as count
+        SUM(times_submitted) as count
       FROM 
         failed_hosts
       GROUP BY 
