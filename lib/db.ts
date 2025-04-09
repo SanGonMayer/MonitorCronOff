@@ -1,5 +1,6 @@
 // lib/db.ts
-import { Pool } from "pg";
+import pkg from "pg";
+const { Pool } = pkg;
 
 // Configura el pool usando la cadena de conexión de tu variable de entorno
 const pool = new Pool({
@@ -24,11 +25,10 @@ export async function initDatabase() {
       )
     `);
 
-    // (Opcional) Puedes agregar datos de ejemplo solo si es necesario
+    // (Opcional) Agregar datos de ejemplo solo si es necesario
     const result = await query(`SELECT COUNT(*) FROM failed_hosts`);
     const count = parseInt(result.rows[0].count, 10);
     if (count === 0) {
-      // Ejemplo de inserciones para datos iniciales
       const sampleHosts = [
         { hostname: "HOST001", filial: "1" },
         { hostname: "HOST002", filial: "1" },
