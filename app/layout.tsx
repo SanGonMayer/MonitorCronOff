@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "Monitor CRN_OFF",
   description: "Monitoreo y gestión de hosts que fallan en la plantilla CRN_OFF",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -27,3 +28,6 @@ export default function RootLayout({
     </html>
   )
 }
+
+
+import './globals.css'
