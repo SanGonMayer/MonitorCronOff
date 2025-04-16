@@ -116,8 +116,8 @@ export default function BranchView() {
                         <TableCell
                           className={`text-center ${
                             host.prevSshSuccess
-                              ? "bg-green-200"
-                              : "bg-red-200"
+                              ? "bg-green-500"
+                              : "bg-red-500"
                           }`}
                         >
                           {host.prevSshSuccess ? "OK" : "FAIL"}
@@ -127,8 +127,8 @@ export default function BranchView() {
                         <TableCell
                           className={`text-center ${
                             host.lastSshSuccess
-                              ? "bg-green-200"
-                              : "bg-red-200"
+                              ? "bg-green-500"
+                              : "bg-red-500"
                           }`}
                         >
                           {host.lastSshSuccess ? "OK" : "FAIL"}
