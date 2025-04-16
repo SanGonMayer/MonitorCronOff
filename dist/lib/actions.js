@@ -66,21 +66,27 @@ export async function connectToHost(ip) {
     const timeout = 3;
     const user = "segmayer";
     const sshCommand = `ssh -o ConnectTimeout=${timeout} -o StrictHostKeyChecking=no -o BatchMode=yes ${user}@${ip} exit`;
+    console.log(`Ejecutando: ${sshCommand}`);
     try {
-        await execAsync(sshCommand);
+        const { stdout, stderr } = await execAsync(sshCommand);
+        console.log("✔️ SSH SUCCESS");
+        console.log("STDOUT:", stdout);
+        console.log("STDERR:", stderr);
         return {
             success: true,
             message: `La IP ${ip} responde a SSH como ${user}.`,
         };
     }
     catch (error) {
+        console.log("❌ SSH ERROR");
+        console.log("STDOUT:", error.stdout?.toString());
+        console.log("STDERR:", error.stderr?.toString());
+        console.log("ERROR MESSAGE:", error.message);
         const stderr = error.stderr?.toString() || "";
         const stdout = error.stdout?.toString() || "";
-        // Si el host respondió pero falló la autenticación
         if (stderr.includes("Permission denied") ||
             stderr.includes("Authentication failed") ||
-            stdout.includes("Solo las personas autorizadas") // texto de bienvenida en tu red
-        ) {
+            stdout.includes("Solo las personas autorizadas")) {
             return {
                 success: true,
                 message: `La IP ${ip} responde a SSH como ${user}, pero falló la autenticación (lo cual está bien).`,

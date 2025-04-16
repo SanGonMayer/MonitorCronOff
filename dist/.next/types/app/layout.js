@@ -1,4 +1,4 @@
-// File: /opt/awx_control/MonitorCronOff/app/layout.tsx
+// File: /home/segmayer/Desktop/MonitorCronOff/app/layout.tsx
 import * as entry from '../../../app/layout.js';
 // Check that the entry is a valid entry
 checkFields();

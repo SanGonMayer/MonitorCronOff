@@ -1,4 +1,4 @@
-// File: /opt/awx_control/MonitorCronOff/app/api/hosts/route.ts
+// File: /home/segmayer/Desktop/MonitorCronOff/app/api/hosts/route.ts
 import * as entry from '../../../../../app/api/hosts/route.js';
 // Check that the entry is a valid entry
 checkFields();

@@ -80,46 +80,65 @@ export async function addHosts(hostnames: string[], branch: string) {
 
 const execAsync = promisify(exec)
 
-export async function connectToHost(ip: string) {
+export async function connectToHostAndSave(hostname: string, ip: string) {
   const timeout = 3
   const user = "segmayer"
-
   const sshCommand = `ssh -o ConnectTimeout=${timeout} -o StrictHostKeyChecking=no -o BatchMode=yes ${user}@${ip} exit`
+
   console.log(`Ejecutando: ${sshCommand}`)
 
+  // 1. Ejecutamos el SSH y determinamos éxito/fallo
+  let lastSuccess = false
   try {
     const { stdout, stderr } = await execAsync(sshCommand)
-    console.log("✔️ SSH SUCCESS")
-    console.log("STDOUT:", stdout)
-    console.log("STDERR:", stderr)
+    console.log("✔️ SSH SUCCESS", stdout, stderr)
+    lastSuccess = true
+  } catch (error: any) {
+    const errOut = (error.stderr || "").toString()
+    const out   = (error.stdout || "").toString()
+    console.log("❌ SSH ERROR", errOut, out)
 
+    // Si falla por auth pero responde, también lo consideramos "conectado"
+    if (
+      errOut.includes("Permission denied") ||
+      errOut.includes("Authentication failed") ||
+      out.includes("Solo las personas autorizadas")
+    ) {
+      lastSuccess = true
+    }
+  }
+
+  // 2. Actualizamos la tabla failed_hosts
+  const upd = await db.query(
+    `UPDATE failed_hosts
+       SET prev_ssh_success = last_ssh_success,
+           last_ssh_success = $2
+     WHERE hostname = $1
+     RETURNING id`,
+    [hostname, lastSuccess]
+  )
+
+  // 3. Si no existía, lo insertamos
+  if (upd.rowCount === 0) {
+    await db.query(
+      `INSERT INTO failed_hosts
+        (hostname, ip_address, prev_ssh_success, last_ssh_success, failure_count, last_failure)
+       VALUES
+        ($1, $2, FALSE, $3, 0, NOW())`,
+      [hostname, ip, lastSuccess]
+    )
+  }
+
+  // 4. Devolvemos el mensaje para el front
+  if (lastSuccess) {
     return {
       success: true,
-      message: `La IP ${ip} responde a SSH como ${user}.`,
+      message: `La IP ${ip} responde a SSH como ${user}.`
     }
-  } catch (error: any) {
-    console.log("❌ SSH ERROR")
-    console.log("STDOUT:", error.stdout?.toString())
-    console.log("STDERR:", error.stderr?.toString())
-    console.log("ERROR MESSAGE:", error.message)
-
-    const stderr = error.stderr?.toString() || ""
-    const stdout = error.stdout?.toString() || ""
-
-    if (
-      stderr.includes("Permission denied") ||
-      stderr.includes("Authentication failed") ||
-      stdout.includes("Solo las personas autorizadas")
-    ) {
-      return {
-        success: true,
-        message: `La IP ${ip} responde a SSH como ${user}, pero falló la autenticación (lo cual está bien).`,
-      }
-    }
-
+  } else {
     return {
       success: false,
-      message: `No se pudo conectar con ${ip} vía SSH (usuario ${user}). El host no responde o está caído.`,
+      message: `No se pudo conectar con ${ip} vía SSH (usuario ${user}).`
     }
   }
 }

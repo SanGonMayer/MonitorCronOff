@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "ts-patch install && NODE_OPTIONS='-r tsconfig-paths/register' tsc",
     "start": "next start",
     "lint": "next lint"
   },
@@ -48,12 +48,11 @@
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "15.2.4",
     "next-themes": "latest",
     "pg": "^8.14.1",
-    "react": "^18.2.0",
+    "react": "^18.3.1",
     "react-day-picker": "8.10.1",
-    "react-dom": "^18.2.0",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
@@ -66,12 +65,16 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^22",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/node": "^22.14.1",
+    "@types/pg": "^8.11.13",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "next": "^15.3.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
+    "ts-patch": "^3.3.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }
